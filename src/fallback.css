@@ -1,0 +1,86 @@
+/* Fallback CSS for when Tailwind is not installed */
+/* This ensures the app renders even without Tailwind CSS */
+
+.min-h-screen { min-height: 100vh; }
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.bg-background-light { background-color: #f8f9fa; }
+.flex-grow { flex-grow: 1; }
+.items-center { align-items: center; }
+.justify-start { justify-content: flex-start; }
+.justify-between { justify-content: space-between; }
+.pt-12 { padding-top: 3rem; }
+.px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+.pb-20 { padding-bottom: 5rem; }
+.py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+.py-10 { padding-top: 2.5rem; padding-bottom: 2.5rem; }
+.w-full { width: 100%; }
+.w-6 { width: 1.5rem; }
+.h-6 { height: 1.5rem; }
+.w-10 { width: 2.5rem; }
+.h-10 { height: 2.5rem; }
+.w-32 { width: 8rem; }
+.h-32 { height: 8rem; }
+.h-14 { height: 3.5rem; }
+.max-w-480px { max-width: 480px; }
+.max-w-340px { max-width: 340px; }
+.gap-3 { gap: 0.75rem; }
+.gap-6 { gap: 1.5rem; }
+.gap-8 { gap: 2rem; }
+.gap-2 { gap: 0.5rem; }
+.text-center { text-align: center; }
+.text-sm { font-size: 0.875rem; }
+.text-lg { font-size: 1.125rem; }
+.text-xl { font-size: 1.25rem; }
+.text-3xl { font-size: 1.875rem; }
+.font-bold { font-weight: 700; }
+.font-semibold { font-weight: 600; }
+.font-medium { font-weight: 500; }
+.text-primary { color: #1a1a1a; }
+.text-white { color: #ffffff; }
+.text-gray-400 { color: #9ca3af; }
+.text-gray-500 { color: #6b7280; }
+.text-gray-600 { color: #4b5563; }
+.text-gray-900 { color: #111827; }
+.text-blue-600 { color: #2563eb; }
+.text-red-700 { color: #b91c1c; }
+.bg-white { background-color: #ffffff; }
+.bg-primary { background-color: #1a1a1a; }
+.bg-gray-100 { background-color: #f3f4f6; }
+.bg-gray-200 { background-color: #e5e7eb; }
+.bg-red-50 { background-color: #fef2f2; }
+.border { border-width: 1px; }
+.border-b { border-bottom-width: 1px; }
+.border-t { border-top-width: 1px; }
+.border-gray-100 { border-color: #f3f4f6; }
+.border-gray-200 { border-color: #e5e7eb; }
+.border-red-200 { border-color: #fecaca; }
+.border-2 { border-width: 2px; }
+.border-6px { border-width: 6px; }
+.rounded-xl { border-radius: 0.75rem; }
+.rounded-full { border-radius: 9999px; }
+.shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
+.sticky { position: sticky; }
+.top-0 { top: 0; }
+.z-50 { z-index: 50; }
+.ml-1 { margin-left: 0.25rem; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-auto { margin-top: auto; }
+.mb-4 { margin-bottom: 1rem; }
+.space-y-2 > * + * { margin-top: 0.5rem; }
+.leading-relaxed { line-height: 1.625; }
+.tracking-tight { letter-spacing: -0.025em; }
+.outline-none { outline: 2px solid transparent; outline-offset: 2px; }
+.transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+.transition-colors { transition-property: color, background-color, border-color; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+.hover\:bg-black:hover { background-color: #000000; }
+.hover\:bg-gray-200:hover { background-color: #e5e7eb; }
+.hover\:text-gray-600:hover { color: #4b5563; }
+.hover\:text-gray-900:hover { color: #111827; }
+.active\:scale-98:active { transform: scale(0.98); }
+.disabled\:opacity-70:disabled { opacity: 0.7; }
+.overflow-hidden { overflow: hidden; }
+.bg-cover { background-size: cover; }
+.bg-center { background-position: center; }
+

@@ -143,7 +143,7 @@ export const registerPushSubscription = async (): Promise<PushSubscription | nul
         try {
           subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+            applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource
           });
         } catch (subscribeError: any) {
           // If subscription fails (e.g., due to different VAPID key), 
@@ -160,7 +160,7 @@ export const registerPushSubscription = async (): Promise<PushSubscription | nul
           // Retry subscription
           subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+            applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource
           });
         }
       }

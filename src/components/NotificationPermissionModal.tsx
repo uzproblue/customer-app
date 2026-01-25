@@ -4,8 +4,7 @@ import {
   registerPushSubscription,
   saveNotificationPermission,
   isNotificationSupported,
-  getNotificationPermission,
-  type NotificationPermissionStatus
+  getNotificationPermission
 } from '../services/notificationService';
 
 interface NotificationPermissionModalProps {

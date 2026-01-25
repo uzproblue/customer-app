@@ -1,4 +1,5 @@
-import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { validateRestaurantId } from '../utils/restaurantContext';
 import { getRestaurantById } from '../services/apiService';
 

@@ -128,6 +128,17 @@ export interface RestaurantResponse {
   email?: string;
   description?: string;
   userId?: string;
+  signupPageConfig?: {
+    headerImage?: string;
+    welcomeTitle?: string;
+    description?: string;
+    formFields?: {
+      fullName: boolean;
+      birthday: boolean;
+      email: boolean;
+      phone: boolean;
+    };
+  };
   createdAt: string;
   updatedAt: string;
 }

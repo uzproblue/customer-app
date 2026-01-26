@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import Footer from "./components/Footer";
-import BrandHeader from "./components/BrandHeader";
 import SignupCard from "./components/SignupCard";
 import SuccessScreen from "./components/SuccessScreen";
 import RestaurantError from "./components/RestaurantError";
@@ -105,8 +104,8 @@ const MainApp: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background-light">
-      <main className="flex-grow flex flex-col items-center justify-start pt-12 px-6 pb-20">
-        <div className="w-full max-w-[480px] flex flex-col gap-8">
+      <main className="flex-grow flex flex-col items-center justify-start pt-12 px-6 pb-12">
+        <div className="w-full max-w-[480px]">
           {isSuccess ? (
             <SuccessScreen
               name={userName}
@@ -114,10 +113,7 @@ const MainApp: React.FC = () => {
               onReset={() => setIsSuccess(false)}
             />
           ) : (
-            <>
-              <BrandHeader />
-              <SignupCard onSignup={handleSignup} restaurantId={restaurantId} />
-            </>
+            <SignupCard onSignup={handleSignup} restaurantId={restaurantId} />
           )}
         </div>
       </main>

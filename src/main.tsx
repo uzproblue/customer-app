@@ -4,6 +4,10 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import './fallback.css'
 import App from './App.tsx'
+import { initializeInstallPrompt } from './services/pwaInstallService'
+
+// Initialize PWA install prompt listener
+initializeInstallPrompt();
 
 // Register service worker for PWA and push notifications
 if ('serviceWorker' in navigator) {

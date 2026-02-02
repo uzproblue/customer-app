@@ -6,6 +6,7 @@ import { addToAppleWallet, addToGoogleWallet, type PassData, type WalletError } 
 import { updatePushSubscription, getNotificationPermission } from '../services/notificationService';
 import { useRestaurant } from '../contexts/RestaurantContext';
 import { saveSession, clearSession } from '../services/sessionService';
+import { isInstallPromptAvailable, showInstallPrompt, isAppInstalled, isIOSSafari } from '../services/pwaInstallService';
 
 interface SuccessScreenProps {
   name: string;
@@ -24,6 +25,9 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ name, userId, onReset }) 
   const [isAddedGoogle, setIsAddedGoogle] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [platform, setPlatform] = useState<'ios' | 'android' | 'other'>('other');
+  const [showPWAInstall, setShowPWAInstall] = useState(false);
+  const [showIOSInstructions, setShowIOSInstructions] = useState(false);
+  const [isInstalling, setIsInstalling] = useState(false);
   const { restaurantId } = useRestaurant();
 
   useEffect(() => {
@@ -65,6 +69,26 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ name, userId, onReset }) 
       }
     }
   }, [userId, restaurantId]);
+
+  // Check for PWA install prompt availability after registration
+  useEffect(() => {
+    // Small delay to ensure the component is fully rendered
+    const timer = setTimeout(() => {
+      if (isAppInstalled()) {
+        return; // Already installed, don't show anything
+      }
+      
+      if (isIOSSafari()) {
+        // Show iOS instructions instead of install button
+        setShowIOSInstructions(true);
+      } else if (isInstallPromptAvailable()) {
+        // Show install button for Chrome/Edge
+        setShowPWAInstall(true);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleAddToAppleWallet = async () => {
     if (isAddedApple) return;
@@ -111,6 +135,20 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ name, userId, onReset }) 
       console.error('Google Wallet error:', walletError);
     } finally {
       setIsAddingGoogle(false);
+    }
+  };
+
+  const handleInstallPWA = async () => {
+    setIsInstalling(true);
+    try {
+      const installed = await showInstallPrompt();
+      if (installed) {
+        setShowPWAInstall(false);
+      }
+    } catch (err) {
+      console.error('PWA install error:', err);
+    } finally {
+      setIsInstalling(false);
     }
   };
 
@@ -236,6 +274,94 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ name, userId, onReset }) 
           </div>
         </div>
       </div>
+
+      {/* PWA Install Prompt - Chrome/Edge */}
+      {showPWAInstall && (
+        <div className="w-full mb-6 p-4 bg-gradient-to-r from-primary to-gray-800 text-white rounded-2xl shadow-lg">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1">
+              <h3 className="font-bold text-sm mb-1">Install App for Quick Access</h3>
+              <p className="text-xs text-white/90">Get faster access and work offline</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowPWAInstall(false)}
+                className="text-white/70 hover:text-white transition-colors"
+                aria-label="Dismiss"
+              >
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
+              <button
+                onClick={handleInstallPWA}
+                disabled={isInstalling}
+                className="px-4 py-2 bg-white text-primary font-semibold rounded-lg text-sm hover:bg-gray-100 active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isInstalling ? (
+                  <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                ) : (
+                  'Install'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* iOS Safari Install Instructions */}
+      {showIOSInstructions && (
+        <div className="w-full mb-6 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl shadow-lg">
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="material-symbols-outlined text-blue-600 text-2xl">download</span>
+                <h3 className="font-bold text-gray-900 text-base">Add to Home Screen</h3>
+              </div>
+              <p className="text-sm text-gray-700 mb-3">
+                Install this app for quick access and offline use
+              </p>
+            </div>
+            <button
+              onClick={() => setShowIOSInstructions(false)}
+              className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+              aria-label="Dismiss"
+            >
+              <span className="material-symbols-outlined text-xl">close</span>
+            </button>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm">
+                1
+              </div>
+              <div className="flex-1 pt-1">
+                <p className="text-sm text-gray-800 font-medium">Tap the Share button</p>
+                <p className="text-xs text-gray-600 mt-1">Look for the <span className="inline-flex items-center justify-center w-5 h-5 bg-gray-200 rounded mx-1"><span className="material-symbols-outlined text-xs">ios_share</span></span> icon at the bottom of Safari</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm">
+                2
+              </div>
+              <div className="flex-1 pt-1">
+                <p className="text-sm text-gray-800 font-medium">Scroll and tap "Add to Home Screen"</p>
+                <p className="text-xs text-gray-600 mt-1">It's in the share menu options</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm">
+                3
+              </div>
+              <div className="flex-1 pt-1">
+                <p className="text-sm text-gray-800 font-medium">Tap "Add" to confirm</p>
+                <p className="text-xs text-gray-600 mt-1">The app will appear on your home screen</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Dynamic Action Buttons */}
       <div className="w-full mb-10">

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { AppleLogo, GoogleWalletIcon, CoffeeIcon } from './Icons';
+import { AppleLogo, GoogleWalletIcon } from './Icons';
 import { addToAppleWallet, addToGoogleWallet, type PassData, type WalletError } from '../services/walletService';
 import { updatePushSubscription, getNotificationPermission } from '../services/notificationService';
 import { useRestaurant } from '../contexts/RestaurantContext';
@@ -28,7 +28,16 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ name, userId, onReset }) 
   const [showPWAInstall, setShowPWAInstall] = useState(false);
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
-  const { restaurantId } = useRestaurant();
+  const { restaurantId, restaurant } = useRestaurant();
+
+  // Card branding defaults (aligned with platform WalletCardPreview)
+  const cardBackgroundColor = '#303030';
+  const textColor = '#FFFFFF';
+  const qrCodeColor = '#000000';
+  const qrCodeBackgroundColor = '#FFFFFF';
+  const cardTitle = restaurant?.name ?? 'Rewards Card';
+  const logo = restaurant?.signupPageConfig?.headerImage ?? '';
+  const memberDisplay = userId ? `#${userId.slice(-6)}` : '—';
 
   useEffect(() => {
     const userAgent = window.navigator.userAgent.toLowerCase();
@@ -249,28 +258,73 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ name, userId, onReset }) 
         </p>
       </div>
 
-      {/* Loyalty Card Visual */}
-      <div className="w-full relative aspect-[1/1] bg-[#0052cc] rounded-[32px] p-8 pb-16 text-white flex flex-col justify-between mb-8 shadow-2xl shadow-blue-200 overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-tr from-black/10 to-transparent pointer-events-none"></div>
-        <div className="flex justify-between items-start relative z-10">
-          <div className="text-left">
-            <p className="text-[10px] font-bold tracking-[0.2em] opacity-80 mb-1">MEMBER CARD</p>
-            <h3 className="text-2xl font-bold tracking-tight">Coffee Rewards</h3>
-          </div>
-          <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center">
-            <CoffeeIcon className="w-6 h-6" />
+      {/* Loyalty Card Visual (matches platform WalletCardPreview) */}
+      <div
+        className="relative w-full max-w-[340px] aspect-[1/1.6] rounded-[24px] overflow-hidden flex flex-col transition-all border border-white/10 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] mb-8"
+        style={{ backgroundColor: cardBackgroundColor }}
+      >
+        {/* Top Bar (Logo & Title) */}
+        <div className="flex items-center justify-between px-6 pt-6 pb-4">
+          <div className="flex items-center gap-3 justify-between w-full">
+            {logo ? (
+              <img
+                src={logo}
+                alt="Logo"
+                className="w-8 h-8 min-w-8 min-h-8 max-w-8 max-h-8 rounded-full border border-white/20 object-cover"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full border border-white/20 bg-white/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-white text-sm">image</span>
+              </div>
+            )}
+            <span className="text-sm font-bold tracking-tight" style={{ color: textColor }}>
+              {cardTitle}
+            </span>
+            <div className="text-sm font-bold tracking-tight" style={{ color: textColor }}>
+              {memberDisplay}
+            </div>
           </div>
         </div>
-        
-        <div className="flex justify-center py-4  relative z-10">
-          <div className="bg-white rounded-2xl w-full h-[85%] flex items-center p-8 justify-center shadow-lg transform group-hover:scale-105 transition-transform duration-500">
-            <QRCodeSVG 
-              value={userId}
-              size={256}
-              level="H"
-              includeMargin={false}
-              className="w-full h-full"
-            />
+
+        {/* Card Content */}
+        <div className="flex-1 px-6 py-6 flex flex-col justify-between">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-[10px] uppercase font-bold tracking-widest" style={{ color: `${textColor}99` }}>
+                Points Balance
+              </p>
+              <p className="text-2xl font-black mt-1" style={{ color: textColor }}>
+                0 pts
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] uppercase font-bold tracking-widest" style={{ color: `${textColor}99` }}>
+                Tier
+              </p>
+              <p className="text-lg font-bold mt-1" style={{ color: textColor }}>
+                Member
+              </p>
+            </div>
+          </div>
+          {/* QR Code Area */}
+          <div className="px-2 py-6 flex flex-col items-center gap-2">
+            <div className="w-full h-full p-3 rounded-lg" style={{ backgroundColor: qrCodeBackgroundColor }}>
+              <QRCodeSVG
+                value={userId}
+                size={248}
+                level="H"
+                fgColor={qrCodeColor}
+                bgColor={qrCodeBackgroundColor}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1">
+            <p className="text-[10px] uppercase font-bold tracking-widest" style={{ color: `${textColor}99` }}>
+              Member Name
+            </p>
+            <p className="text-lg font-medium" style={{ color: textColor }}>
+              {name}
+            </p>
           </div>
         </div>
       </div>

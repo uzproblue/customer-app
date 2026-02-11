@@ -3,12 +3,18 @@
  * Handles integration with Apple Wallet and Google Wallet
  */
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
 export interface PassData {
   userName: string;
   memberId?: string;
   qrCodeData?: string;
   cardTitle?: string;
   cardDescription?: string;
+  /** Required for Google Wallet: customer ID from signup (used by backend to build pass). */
+  customerId?: string;
+  /** Required for Google Wallet: restaurant ID (used by backend to build pass). */
+  restaurantId?: string;
 }
 
 export interface WalletError {
@@ -110,118 +116,37 @@ export const addToAppleWallet = async (passData: PassData): Promise<void> => {
 
 /**
  * Add pass to Google Wallet
- * Uses Google Wallet API to create and save a loyalty card
+ * Calls backend to get a signed save URL, then redirects the user to add the pass.
+ * Requires customerId and restaurantId in passData (provided by SuccessScreen after signup).
  */
 export const addToGoogleWallet = async (passData: PassData): Promise<void> => {
   try {
-    // Check if Google Wallet API is available
-    if (typeof window === 'undefined' || !window.google || !window.google.wallet) {
-      // Load Google Wallet API script if not available
-      await loadGoogleWalletScript();
+    const { customerId, restaurantId } = passData;
+    if (!customerId || !restaurantId) {
+      throw new Error('Customer and restaurant are required to add to Google Wallet. Please complete signup first.');
     }
 
-    const issuerId = import.meta.env.VITE_GOOGLE_WALLET_ISSUER_ID;
-    const classId = import.meta.env.VITE_GOOGLE_WALLET_CLASS_ID || 'loyalty_card_class';
-    const apiKey = import.meta.env.VITE_GOOGLE_WALLET_API_KEY;
+    const response = await fetch(`${API_BASE_URL}/api/wallet/google-pass`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customerId, restaurantId }),
+    });
 
-    if (!issuerId || !apiKey) {
-      throw new Error('Google Wallet credentials are not configured. Please set VITE_GOOGLE_WALLET_ISSUER_ID and VITE_GOOGLE_WALLET_API_KEY in your .env file.');
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const message = result.message || (response.status === 503
+        ? 'Google Wallet is not configured. Please try again later.'
+        : result.error || `Failed to create pass (${response.status})`);
+      throw new Error(message);
     }
 
-    const memberId = passData.memberId || generateMemberId(passData.userName);
-    const qrCodeData = passData.qrCodeData || generateQRCodeData(memberId, passData.userName);
-
-    // Create the loyalty object for Google Wallet
-    const loyaltyObject = {
-      id: `${issuerId}.${memberId}`,
-      classId: `${issuerId}.${classId}`,
-      state: 'ACTIVE',
-      heroImage: {
-        sourceUri: {
-          uri: import.meta.env.VITE_GOOGLE_WALLET_HERO_IMAGE_URL || ''
-        }
-      },
-      textModulesData: [
-        {
-          header: 'Member Name',
-          body: passData.userName,
-          id: 'member_name'
-        },
-        {
-          header: 'Member ID',
-          body: memberId,
-          id: 'member_id'
-        }
-      ],
-      barcode: {
-        type: 'QR_CODE',
-        value: qrCodeData,
-        alternateText: memberId
-      },
-      accountName: passData.userName,
-      accountId: memberId,
-      loyaltyPoints: {
-        label: 'Points',
-        balance: {
-          string: '0'
-        }
-      }
-    };
-
-    // Create the pass class if it doesn't exist (this would typically be done server-side)
-    const loyaltyClass = {
-      id: `${issuerId}.${classId}`,
-      issuerName: import.meta.env.VITE_GOOGLE_WALLET_ISSUER_NAME || 'Coffee Rewards',
-      reviewStatus: 'UNDER_REVIEW',
-      programName: passData.cardTitle || 'Coffee Rewards',
-      programLogo: {
-        sourceUri: {
-          uri: import.meta.env.VITE_GOOGLE_WALLET_LOGO_URL || ''
-        }
-      }
-    };
-
-    // Use Google Wallet API to save the pass
-    // Note: This requires the Google Wallet API JavaScript library
-    if (window.google && window.google.wallet && window.google.wallet.objects) {
-      await window.google.wallet.objects.save({
-        'loyaltyObjects': [loyaltyObject]
-      });
-    } else {
-      // Fallback: Use the REST API endpoint if JavaScript API is not available
-      const apiEndpoint = import.meta.env.VITE_GOOGLE_WALLET_API_ENDPOINT;
-      
-      if (!apiEndpoint) {
-        throw new Error('Google Wallet API endpoint is not configured. Please set VITE_GOOGLE_WALLET_API_ENDPOINT in your .env file.');
-      }
-
-      const response = await fetch(apiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          loyaltyObject,
-          loyaltyClass
-        })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to create Google Wallet pass: ${response.status} ${errorText}`);
-      }
-
-      const result = await response.json();
-      
-      // Open the save URL in Google Wallet
-      if (result.saveUrl) {
-        window.location.href = result.saveUrl;
-      } else {
-        throw new Error('No save URL returned from Google Wallet API');
-      }
+    const saveUrl = result.data?.saveUrl;
+    if (!saveUrl || typeof saveUrl !== 'string') {
+      throw new Error('No save URL returned from the server.');
     }
-    
+
+    window.location.href = saveUrl;
   } catch (error) {
     const walletError: WalletError = {
       message: error instanceof Error ? error.message : 'Unknown error occurred while adding to Google Wallet',
@@ -230,33 +155,6 @@ export const addToGoogleWallet = async (passData: PassData): Promise<void> => {
     };
     throw walletError;
   }
-};
-
-/**
- * Load Google Wallet API script dynamically
- */
-const loadGoogleWalletScript = (): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    if (window.google && window.google.wallet) {
-      resolve();
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'https://pay.google.com/gp/p/js/pay.js';
-    script.async = true;
-    script.onload = () => {
-      if (window.google && window.google.wallet) {
-        resolve();
-      } else {
-        reject(new Error('Google Wallet API failed to load'));
-      }
-    };
-    script.onerror = () => {
-      reject(new Error('Failed to load Google Wallet API script'));
-    };
-    document.head.appendChild(script);
-  });
 };
 
 /**
@@ -282,18 +180,5 @@ export const isGoogleWalletAvailable = (): boolean => {
   const isAndroid = /android/.test(userAgent);
   
   return isAndroid || true; // Google Wallet can work on any platform via web
-};
-
-// Extend Window interface for TypeScript
-declare global {
-  interface Window {
-    google?: {
-      wallet?: {
-        objects?: {
-          save: (data: { loyaltyObjects: unknown[] }) => Promise<void>;
-        };
-      };
-    };
-  }
 }
 

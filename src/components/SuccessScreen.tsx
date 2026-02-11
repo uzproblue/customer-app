@@ -132,8 +132,10 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ name, userId, onReset }) 
     try {
       const passData: PassData = {
         userName: name,
-        cardTitle: 'Coffee Rewards',
-        cardDescription: 'Loyalty Member Card'
+        cardTitle: restaurant?.name ?? 'Rewards Card',
+        cardDescription: 'Loyalty Member Card',
+        customerId: userId,
+        restaurantId: restaurantId ?? undefined
       };
       
       await addToGoogleWallet(passData);

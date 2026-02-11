@@ -65,11 +65,21 @@ export const createUser = async (userData: CreateUserRequest): Promise<UserRespo
       throw new Error(result.message || 'Failed to create user');
     }
 
-    // Support both { data: user } and top-level user fields (e.g. { success, message, _id, name, ... })
-    const user = result.data ?? (result._id ? result as UserResponse : null);
-    if (!user || !user._id) {
+    // Normalize response: backend uses data with "id" (not _id); support data/customer/user or top-level
+    const raw = result.data ?? result.customer ?? result.user ?? result;
+    const id = raw._id ?? raw.id;
+    if (!id) {
       throw new Error(result.message || 'Failed to create user');
     }
+    const user: UserResponse = {
+      _id: String(id),
+      name: String(raw.name ?? ''),
+      email: String(raw.email ?? ''),
+      phone: String(raw.phone ?? ''),
+      dateOfBirth: typeof raw.dateOfBirth === 'string' ? raw.dateOfBirth : '',
+      createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString(),
+      updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : new Date().toISOString(),
+    };
     return user;
   } catch (error) {
     if (error instanceof Error && 'status' in error) {

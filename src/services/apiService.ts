@@ -50,7 +50,7 @@ export const createUser = async (userData: CreateUserRequest): Promise<UserRespo
       body: JSON.stringify(userData),
     });
 
-    const result: ApiResponse<UserResponse> = await response.json();
+    const result = await response.json();
 
     if (!response.ok) {
       const error: ApiError = {
@@ -61,11 +61,16 @@ export const createUser = async (userData: CreateUserRequest): Promise<UserRespo
       throw error;
     }
 
-    if (!result.success || !result.data) {
+    if (!result.success) {
       throw new Error(result.message || 'Failed to create user');
     }
 
-    return result.data;
+    // Support both { data: user } and top-level user fields (e.g. { success, message, _id, name, ... })
+    const user = result.data ?? (result._id ? result as UserResponse : null);
+    if (!user || !user._id) {
+      throw new Error(result.message || 'Failed to create user');
+    }
+    return user;
   } catch (error) {
     if (error instanceof Error && 'status' in error) {
       throw error;

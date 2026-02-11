@@ -7,14 +7,17 @@ import { updatePushSubscription, getNotificationPermission } from '../services/n
 import { useRestaurant } from '../contexts/RestaurantContext';
 import { saveSession, clearSession } from '../services/sessionService';
 import { isInstallPromptAvailable, showInstallPrompt, isAppInstalled, isIOSSafari } from '../services/pwaInstallService';
+import NotificationPermissionModal from './NotificationPermissionModal';
 
 interface SuccessScreenProps {
   name: string;
   userId: string;
   onReset: () => void;
+  showNotificationModal?: boolean;
+  onNotificationComplete?: () => void;
 }
 
-const SuccessScreen: React.FC<SuccessScreenProps> = ({ name, userId, onReset }) => {
+const SuccessScreen: React.FC<SuccessScreenProps> = ({ name, userId, onReset, showNotificationModal, onNotificationComplete }) => {
   const handleSignOut = () => {
     clearSession();
     onReset();
@@ -444,6 +447,16 @@ const SuccessScreen: React.FC<SuccessScreenProps> = ({ name, userId, onReset }) 
       >
         Sign Out
       </button>
+
+      {/* Notification permission modal after signup */}
+      {showNotificationModal && restaurantId && onNotificationComplete && (
+        <NotificationPermissionModal
+          customerId={userId}
+          restaurantId={restaurantId}
+          onComplete={onNotificationComplete}
+          onSkip={onNotificationComplete}
+        />
+      )}
     </div>
   );
 };

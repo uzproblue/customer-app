@@ -13,12 +13,14 @@ const MainApp: React.FC = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [userName, setUserName] = useState("");
   const [userId, setUserId] = useState("");
+  const [showNotificationModalAfterSignup, setShowNotificationModalAfterSignup] = useState(false);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const { restaurantId, isValid, isLoading } = useRestaurant();
 
   const handleSignup = (name: string, id: string) => {
     setUserName(name);
     setUserId(id);
+    setShowNotificationModalAfterSignup(true);
     setIsSuccess(true);
   };
 
@@ -110,7 +112,12 @@ const MainApp: React.FC = () => {
             <SuccessScreen
               name={userName}
               userId={userId}
-              onReset={() => setIsSuccess(false)}
+              onReset={() => {
+                setIsSuccess(false);
+                setShowNotificationModalAfterSignup(false);
+              }}
+              showNotificationModal={showNotificationModalAfterSignup}
+              onNotificationComplete={() => setShowNotificationModalAfterSignup(false)}
             />
           ) : (
             <SignupCard onSignup={handleSignup} restaurantId={restaurantId} />

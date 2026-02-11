@@ -30,19 +30,16 @@ const NotificationPermissionModal: React.FC<NotificationPermissionModalProps> = 
     // Handle already granted permission on mount
     const currentPermission = getNotificationPermission();
     if (currentPermission === 'granted') {
-      // Permission already granted, try to register push subscription and save
+      // Redirect immediately; run save in background so user is never stuck
+      onComplete();
       const setupPermission = async () => {
         try {
-          // Try to register push subscription (may have failed before or service worker wasn't ready)
           let pushSubscription = null;
           try {
             pushSubscription = await registerPushSubscription();
           } catch (pushError) {
             console.warn('Push subscription failed, but browser notifications are enabled:', pushError);
-            // Continue even if push subscription fails
           }
-
-          // Save permission to backend (this will update existing permission with push subscription if available)
           await saveNotificationPermission({
             customerId,
             restaurantId,
@@ -51,11 +48,8 @@ const NotificationPermissionModal: React.FC<NotificationPermissionModalProps> = 
           });
         } catch (error) {
           console.error('Error setting up notification permission:', error);
-        } finally {
-          onComplete();
         }
       };
-      
       setupPermission();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

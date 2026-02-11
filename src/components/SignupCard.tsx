@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { createUser } from '../services/apiService';
 import type { ApiError } from '../services/apiService';
-import NotificationPermissionModal from './NotificationPermissionModal';
 import { saveSession } from '../services/sessionService';
 import { useRestaurant } from '../contexts/RestaurantContext';
 
@@ -34,8 +33,6 @@ const SignupCard: React.FC<SignupCardProps> = ({ onSignup, restaurantId }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showNotificationModal, setShowNotificationModal] = useState(false);
-  const [registeredUserId, setRegisteredUserId] = useState<string | null>(null);
 
   // Convert MM/DD/YYYY to YYYY-MM-DD
   const convertDateFormat = (dateStr: string): string => {
@@ -89,10 +86,9 @@ const SignupCard: React.FC<SignupCardProps> = ({ onSignup, restaurantId }) => {
         restaurantId: restaurantId,
         createdAt: userResponse.createdAt || new Date().toISOString()
       });
-      
-      // Set the registered user ID and show notification modal
-      setRegisteredUserId(userResponse._id);
-      setShowNotificationModal(true);
+
+      // Redirect to success screen immediately so user always gets there
+      onSignup(userResponse.name, userResponse._id);
     } catch (err) {
       const apiError = err as ApiError;
       if (apiError.errors && apiError.errors.length > 0) {
@@ -204,21 +200,6 @@ const SignupCard: React.FC<SignupCardProps> = ({ onSignup, restaurantId }) => {
           </p>
       </form>
 
-      {/* Notification Permission Modal */}
-      {showNotificationModal && registeredUserId && (
-        <NotificationPermissionModal
-          customerId={registeredUserId}
-          restaurantId={restaurantId}
-          onComplete={() => {
-            setShowNotificationModal(false);
-            onSignup(formData.name, registeredUserId);
-          }}
-          onSkip={() => {
-            setShowNotificationModal(false);
-            onSignup(formData.name, registeredUserId);
-          }}
-        />
-      )}
       </div>
     </div>
   );
